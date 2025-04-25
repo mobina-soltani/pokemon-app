@@ -7,5 +7,9 @@ app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => {
-    res.send("Hello world!");
-});
+    res.redirect('/home');
+})
+
+app.get('/home', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+})
