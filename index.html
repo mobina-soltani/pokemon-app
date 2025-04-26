@@ -6,13 +6,13 @@
 </head>
 <body>
     <h1>Pokemon List</h1>
-    <ul id="pokemon_list"></ul>
+    <ul id="pokemon-list"></ul>
     <script>
         fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
         .then((response) => response.json())
         .then((data) => {
             const pokemonList = document.getElementById("pokemon-list");
-            data.result.forEach((pokemon) => {
+            data.results.forEach((pokemon) => {
                 const li = document.createElement("li");
                 li.innerText = pokemon.name;
                 pokemonList.appendChild(li);
