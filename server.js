@@ -22,7 +22,7 @@ app.get("/login", (req, res) => {
 
 const userArr = [
 	{ username: "admin1", password: "admin1" },
-	{ username: "admin2", password: "admin12" },
+	{ username: "admin2", password: "admin2" },
 	{ username: "user1", password: "user1" },
 	{ username: "user2", password: "user2" },
 	{ username: "user3", password: "user3" },
