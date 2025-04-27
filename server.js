@@ -9,7 +9,7 @@ app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => {
-	res.redirect("/home");
+	res.redirect("/login");
 });
 
 app.get("/home", (req, res) => {
@@ -36,7 +36,7 @@ app.post("/login", (req, res) => {
 	);
 
 	if (user) {
-		res.send(`welcome ${username}`);
+		res.redirect("/home");
 	} else {
 		res.status(401).send("invalid credentials");
 	}
