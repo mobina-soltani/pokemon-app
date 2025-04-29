@@ -1,0 +1,25 @@
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Home Page</title>
+	</head>
+	<body>
+		<h1>Welcome <%= username %>!</h1>
+		<h1>Pokemon List</h1>
+		<ul id="pokemon-list"></ul>
+		<script>
+			fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
+				.then((response) => response.json())
+				.then((data) => {
+					const pokemonList = document.getElementById("pokemon-list");
+					data.results.forEach((pokemon) => {
+						const li = document.createElement("li");
+						li.innerText = pokemon.name;
+						pokemonList.appendChild(li);
+					});
+				})
+				.catch((error) => console.error("Error fetching Pokemon:", error));
+		</script>
+	</body>
+</html>
