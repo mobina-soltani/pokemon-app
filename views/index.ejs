@@ -15,7 +15,17 @@
 					const pokemonList = document.getElementById("pokemon-list");
 					data.results.forEach((pokemon) => {
 						const li = document.createElement("li");
-						li.innerText = pokemon.name;
+						li.textContent = pokemon.name;
+						li.addEventListener("click", () => {
+							fetch(`/addFav/${pokemon.name}`)
+								.then((res) => res.json())
+								.then((data) => {
+									alert(data.message);
+								})
+								.catch((error) =>
+									console.error("Error adding favorites", error)
+								);
+						});
 						pokemonList.appendChild(li);
 					});
 				})
