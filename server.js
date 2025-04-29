@@ -61,5 +61,5 @@ const isAuthenticated = (req, res, next) => {
 app.use(isAuthenticated);
 app.get("/home", (req, res) => {
 	// res.sendFile(__dirname + '/index.html');
-	res.sender("index.ejs", { username: req.session.user.username });
+	res.render("index.ejs", { username: req.session.user.username });
 });
