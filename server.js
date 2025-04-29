@@ -27,6 +27,20 @@ const favSchema = new mongoose.Schema({
 
 const favorite = mongoose.model("favorite", favSchema);
 
+app.get("/addFav/:pokemonname", isAuthenticated, async (req, res) => {
+	const pokemonname = req.params.pokemonname;
+	const username = req.session.user.username;
+
+	try {
+		const newFav = new favorite({ username, pokemonname });
+		await newFav.save();
+		res.json({ success: true, message: `${pokemonname} added to favorites` });
+	} catch (error) {
+		console.log(error);
+		res.status(500).send("server error while adding favorites");
+	}
+});
+
 app.listen(PORT, () => {
 	console.log(`server is running on http:\\localhost:${PORT}`);
 });
