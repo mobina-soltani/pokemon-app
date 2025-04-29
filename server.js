@@ -86,6 +86,17 @@ app.get("/addFav/:pokemonname", isAuthenticated, async (req, res) => {
 	}
 });
 
+app.get("/favorites", isAuthenticated, async (req, res) => {
+	const username = req.session.user.username;
+	try {
+		const favorites = await favorite.find({ username: username });
+		res.json(favorites);
+	} catch (error) {
+		console.error("error fetching favorites", error);
+		res.status(500).send("server error fetching favorites");
+	}
+});
+
 app.use(isAuthenticated);
 app.get("/home", (req, res) => {
 	//res.sendFile(__dirname + "/index.html");
