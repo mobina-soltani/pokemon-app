@@ -1,5 +1,6 @@
 const express = require("express");
-var session = require("express-session");
+const session = require("express-session");
+const PORT = 3000;
 const req = require("express/lib/request");
 const res = require("express/lib/response");
 const app = express();
@@ -44,22 +45,22 @@ app.post("/login", (req, res) => {
 
 	if (user) {
 		req.session.user = user;
-		res.render("home.ejs", { username: user.username });
+		res.redirect("/home", { username: user.username });
 	} else {
 		res.status(401).send("invalid credentials");
 	}
 });
 
-const isAuthenticated = (req, res, next) => {
+function isAuthenticated(req, res, next) {
 	if (req.session && req.session.user) {
-		return next();
+		next();
 	} else {
 		res.redirect("/login");
 	}
-};
+}
 
 app.use(isAuthenticated);
 app.get("/home", (req, res) => {
-	// res.sendFile(__dirname + '/index.html');
-	res.render("index.ejs", { username: req.session.user.username });
+	res.sendFile(__dirname + "/index.html");
+	// res.render("index.ejs", { username: req.session.user.username });
 });
