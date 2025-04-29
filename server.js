@@ -4,6 +4,8 @@ const res = require("express/lib/response");
 const app = express();
 const PORT = 3000;
 
+app.set("view engine", "ejs");
+
 app.listen(PORT, () => {
 	console.log(`server is running on http:\\localhost:${PORT}`);
 });
@@ -36,7 +38,7 @@ app.post("/login", (req, res) => {
 	);
 
 	if (user) {
-		res.redirect("/home");
+		res.render("home.ejs", { username: user.username });
 	} else {
 		res.status(401).send("invalid credentials");
 	}
