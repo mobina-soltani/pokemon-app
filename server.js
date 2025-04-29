@@ -20,6 +20,13 @@ mongoose
 	.then(() => console.log("MongoDB conected"))
 	.catch((err) => console.log("MongoDB Connection Error:", err));
 
+const favSchema = new mongoose.Schema({
+	username: String,
+	pokemonname: String,
+});
+
+const favorite = mongoose.model("favorite", favSchema);
+
 app.listen(PORT, () => {
 	console.log(`server is running on http:\\localhost:${PORT}`);
 });
