@@ -1,8 +1,17 @@
 const express = require("express");
+var session = require("express-session");
 const req = require("express/lib/request");
 const res = require("express/lib/response");
 const app = express();
-const PORT = 3000;
+
+app.use(
+	session({
+		secret: "keyboard cat",
+		resave: true,
+		saveUninitialized: true,
+		cookie: { secure: false },
+	})
+);
 
 app.set("view engine", "ejs");
 
@@ -12,10 +21,6 @@ app.listen(PORT, () => {
 
 app.get("/", (req, res) => {
 	res.redirect("/login");
-});
-
-app.get("/home", (req, res) => {
-	res.sendFile(__dirname + "/index.html");
 });
 
 app.get("/login", (req, res) => {
@@ -38,8 +43,23 @@ app.post("/login", (req, res) => {
 	);
 
 	if (user) {
+		req.session.user = user;
 		res.render("home.ejs", { username: user.username });
 	} else {
 		res.status(401).send("invalid credentials");
 	}
+});
+
+const isAuthenticated = (req, res, next) => {
+	if (req.session && req.session.user) {
+		return next();
+	} else {
+		res.redirect("/login");
+	}
+};
+
+app.use(isAuthenticated);
+app.get("/home", (req, res) => {
+	// res.sendFile(__dirname + '/index.html');
+	res.sender("index.ejs", { username: req.session.user.username });
 });
