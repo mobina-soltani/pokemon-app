@@ -1,8 +1,7 @@
 const express = require("express");
 const session = require("express-session");
+const mongoose = require("mongoose");
 const PORT = 3000;
-const req = require("express/lib/request");
-const res = require("express/lib/response");
 const app = express();
 
 app.use(
@@ -15,6 +14,11 @@ app.use(
 );
 
 app.set("view engine", "ejs");
+
+mongoose
+	.connect("mongodb://127.0.0.1:27017/pokemonApp")
+	.then(() => console.log("MongoDB conected"))
+	.catch((err) => console.log("MongoDB Connection Error:", err));
 
 app.listen(PORT, () => {
 	console.log(`server is running on http:\\localhost:${PORT}`);
