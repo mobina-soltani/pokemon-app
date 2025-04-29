@@ -34,9 +34,11 @@ const userArr = [
 	{ username: "user1", password: "user1" },
 	{ username: "user2", password: "user2" },
 	{ username: "user3", password: "user3" },
+	{ username: "Mahsa", password: "Maria" },
 ];
 
 app.use(express.urlencoded({ extended: true }));
+
 app.post("/login", (req, res) => {
 	const { username, password } = req.body;
 	const user = userArr.find(
@@ -45,7 +47,7 @@ app.post("/login", (req, res) => {
 
 	if (user) {
 		req.session.user = user;
-		res.redirect("/home", { username: user.username });
+		res.redirect("/home");
 	} else {
 		res.status(401).send("invalid credentials");
 	}
@@ -61,6 +63,6 @@ function isAuthenticated(req, res, next) {
 
 app.use(isAuthenticated);
 app.get("/home", (req, res) => {
-	res.sendFile(__dirname + "/index.html");
-	// res.render("index.ejs", { username: req.session.user.username });
+	//res.sendFile(__dirname + "/index.html");
+	res.render("index", { username: req.session.user.username });
 });
