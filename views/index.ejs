@@ -5,9 +5,11 @@
 		<title>Home Page</title>
 	</head>
 	<body>
-		<h1>Welcome <%= username %>!</h1>
+		<h3>Welcome <%= username %>!</h3>
 		<h1>Pokemon List</h1>
 		<ul id="pokemon-list"></ul>
+		<h3>My Favorites</h3>
+		<ul id="favorites-list"></ul>
 		<script>
 			fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
 				.then((response) => response.json())
@@ -37,6 +39,21 @@
 					});
 				})
 				.catch((error) => console.error("Error fetching Pokemon:", error));
+
+			function fetchFavorites() {
+				fetch("/favorites")
+					.then((response) => response.json())
+					.then((favorites) => {
+						const favslist = document.getElementById("favorites-list");
+						favslist.innerHTML = "";
+						favorites.forEach((fav) => {
+							const li = document.createElement("li");
+							li.textContent = fav.pokemonname;
+							favslist.appendChild(li);
+						});
+					})
+					.catch((error) => console.error("error fetching favorites:", error));
+			}
 		</script>
 	</body>
 </html>
