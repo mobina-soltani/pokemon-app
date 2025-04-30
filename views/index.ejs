@@ -58,6 +58,10 @@
 					.catch((error) => console.error("error fetching favorites:", error));
 			}
 			fetchFavorites();
+
+			function fetchTimeline() {
+				fetch("timeline");
+			}
 		</script>
 	</body>
 </html>
