@@ -106,6 +106,20 @@ const timelineSchema = new mongoose.Schema({
 
 const Timeline = mongoose.model("Timeline", timelineSchema);
 
+async function addToTimeline(title, description, username) {
+	try {
+		const event = new Timeline({
+			title,
+			description,
+			date: new Date(),
+			username,
+		});
+		await event.save();
+	} catch (error) {
+		console.error("Error adding to timeline:", error);
+	}
+}
+
 app.use(isAuthenticated);
 app.get("/home", (req, res) => {
 	//res.sendFile(__dirname + "/index.html");
