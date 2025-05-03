@@ -97,6 +97,15 @@ app.get("/favorites", isAuthenticated, async (req, res) => {
 	}
 });
 
+const timelineSchema = new mongoose.Schema({
+	title: String,
+	description: String,
+	date: Date,
+	username: String,
+});
+
+const Timeline = mongoose.model("Timeline", timelineSchema);
+
 app.use(isAuthenticated);
 app.get("/home", (req, res) => {
 	//res.sendFile(__dirname + "/index.html");
