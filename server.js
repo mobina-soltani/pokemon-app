@@ -120,6 +120,14 @@ async function addToTimeline(title, description, username) {
 	}
 }
 
+await addToTimeline("Login", "User logged in", user.username);
+
+await addToTimeline(
+	"Favorite Added",
+	`Added ${pokemonname} to favorites`,
+	username
+);
+
 app.use(isAuthenticated);
 app.get("/home", (req, res) => {
 	//res.sendFile(__dirname + "/index.html");
