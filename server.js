@@ -128,6 +128,19 @@ await addToTimeline(
 	username
 );
 
+app.get("/timeline", isAuthenticated, async (req, res) => {
+	const username = req.session.user.username;
+	try {
+		const timelineEvents = await Timeline.find({ username: username }).sort({
+			date: -1,
+		});
+		res.json(timelineEvents);
+	} catch (error) {
+		console.error("Error fetching timeline:", error);
+		res.status(500).send("Server error fetching timeline");
+	}
+});
+
 app.use(isAuthenticated);
 app.get("/home", (req, res) => {
 	//res.sendFile(__dirname + "/index.html");
