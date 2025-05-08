@@ -1,9 +1,25 @@
 const express = require("express");
 const session = require("express-session");
 const mongoose = require("mongoose");
-const PORT = 3000;
-const app = express();
+const path = require("path");
+const bcrypt = require("bcrypt");
+const { Favorite, Timeline } = require("./models");
 
+const app = express();
+const PORT = 3000;
+
+// MongoDB Connection
+mongoose
+	.connect("mongodb://127.0.0.1:27017/pokemonApp")
+	.then(() => console.log("MongoDB connected"))
+	.catch((err) => console.log("MongoDB Connection Error:", err));
+
+// Middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // Needed for DELETE via fetch()
+app.use(express.static(__dirname)); // Serve HTML/CSS/JS
+
+// Session Setup
 app.use(
 	session({
 		secret: "keyboard cat",
@@ -13,20 +29,7 @@ app.use(
 	})
 );
 
-app.set("view engine", "ejs");
-
-mongoose
-	.connect("mongodb://127.0.0.1:27017/pokemonApp")
-	.then(() => console.log("MongoDB conected"))
-	.catch((err) => console.log("MongoDB Connection Error:", err));
-
-const favSchema = new mongoose.Schema({
-	username: String,
-	pokemonname: String,
-});
-
-const favorite = mongoose.model("favorite", favSchema);
-
+// Authentication Middleware
 function isAuthenticated(req, res, next) {
 	if (req.session && req.session.user) {
 		next();
@@ -35,114 +38,160 @@ function isAuthenticated(req, res, next) {
 	}
 }
 
-app.listen(PORT, () => {
-	console.log(`server is running on http://localhost:${PORT}`);
-});
+// add dummy users
+const userArr = [
+	{
+		username: "admin1",
+		password: "$2b$10$KKmddhaVDf.mbBzcjOFOZOav614v6qt2zBhnrZ4hInCtsR60l2rxi",
+	},
+	{
+		username: "admin2",
+		password: "$2b$10$cUGIqLjV3hBM5oTYxos3i.2nYNmasaKsLMc.O5iFLBVGwUnBpba0y",
+	},
+	{
+		username: "admin3",
+		password: "$2b$10$5Q0x1Z9j6v4a7g8z5JmXUOe1YkKq0c4G3l5Fh6Q8W9Z5E7d2f3i1y",
+	},
+	{
+		username: "admin4",
+		password: "$2b$10$7Q0x1Z9j6v4a7g8z5JmXUOe1YkKq0c4G3l5Fh6Q8W9Z5E7d2f3i1y",
+	},
+	{
+		username: "admin5",
+		password: "$2b$10$8Q0x1Z9j6v4a7g8z5JmXUOe1YkKq0c4G3l5Fh6Q8W9Z5E7d2f3i1y",
+	},
+	{
+		username: "admin6",
+		password: "$2b$10$9Q0x1Z9j6v4a7g8z5JmXUOe1YkKq0c4G3l5Fh6Q8W9Z5E7d2f3i1y",
+	},
+];
 
+// Routes
 app.get("/", (req, res) => {
 	res.redirect("/login");
 });
 
 app.get("/login", (req, res) => {
-	res.sendFile(__dirname + "/login.html");
+	res.sendFile(path.join(__dirname, "login.html"));
 });
 
-const userArr = [
-	{ username: "admin1", password: "admin1" },
-	{ username: "admin2", password: "admin2" },
-	{ username: "user1", password: "user1" },
-	{ username: "user2", password: "user2" },
-	{ username: "user3", password: "user3" },
-	{ username: "Mahsa", password: "Maria" },
-];
+app.post("/login", async (req, res) => {
+	const { username, password, rememberMe } = req.body;
+	const user = userArr.find((user) => user.username === username);
 
-app.use(express.urlencoded({ extended: true }));
-
-app.post("/login", (req, res) => {
-	const { username, password } = req.body;
-	const user = userArr.find(
-		(user) => user.username === username && user.password === password
-	);
-
-	if (user) {
+	if (user && (await bcrypt.compare(password, user.password))) {
 		req.session.user = user;
+
+		// Remember Me logic
+		if (rememberMe) {
+			req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000;
+		} else {
+			req.session.cookie.expires = false;
+		}
+
+		await Timeline.create({ username, action: "Logged in" });
 		res.redirect("/home");
 	} else {
-		res.status(401).send("invalid credentials");
+		res.status(401).send("Invalid credentials");
 	}
 });
 
+app.get("/logout", isAuthenticated, async (req, res) => {
+	await Timeline.create({
+		username: req.session.user.username,
+		action: "Logged out",
+	});
+	req.session.destroy(() => res.redirect("/login"));
+});
+
+app.get("/home", isAuthenticated, (req, res) => {
+	res.sendFile(path.join(__dirname, "home.html"));
+});
+
+app.get("/timelinePage", isAuthenticated, (req, res) => {
+	res.sendFile(path.join(__dirname, "timeline.html"));
+});
+
+// Add favorite Pokémon
 app.get("/addFav/:pokemonname", isAuthenticated, async (req, res) => {
-	const pokemonname = req.params.pokemonname;
+	const { pokemonname } = req.params;
 	const username = req.session.user.username;
 
 	try {
-		const newFav = new favorite({ username, pokemonname });
+		const newFav = new Favorite({ username, pokemonname });
 		await newFav.save();
+		await Timeline.create({
+			username,
+			action: `Added ${pokemonname} to favorites`,
+		});
 		res.json({ success: true, message: `${pokemonname} added to favorites` });
 	} catch (error) {
-		console.log(error);
-		res.status(500).send("server error while adding favorites");
+		console.error("Add favorite error:", error);
+		res.status(500).send("Server error while adding favorite");
 	}
 });
 
+// Get all favorites
 app.get("/favorites", isAuthenticated, async (req, res) => {
 	const username = req.session.user.username;
+
 	try {
-		const favorites = await favorite.find({ username: username });
+		const favorites = await Favorite.find({ username });
 		res.json(favorites);
 	} catch (error) {
-		console.error("error fetching favorites", error);
-		res.status(500).send("server error fetching favorites");
+		console.error("Error fetching favorites", error);
+		res.status(500).send("Server error fetching favorites");
 	}
 });
 
-const timelineSchema = new mongoose.Schema({
-	title: String,
-	description: String,
-	date: Date,
-	username: String,
-});
+// Remove a favorite
+app.delete("/favorites/:pokemonname", isAuthenticated, async (req, res) => {
+	const { pokemonname } = req.params;
+	const username = req.session.user.username;
 
-const Timeline = mongoose.model("Timeline", timelineSchema);
-
-async function addToTimeline(title, description, username) {
 	try {
-		const event = new Timeline({
-			title,
-			description,
-			date: new Date(),
+		await Favorite.deleteOne({ username, pokemonname });
+		await Timeline.create({
 			username,
+			action: `Removed ${pokemonname} from favorites`,
 		});
-		await event.save();
+		res.json({
+			success: true,
+			message: `${pokemonname} removed from favorites`,
+		});
 	} catch (error) {
-		console.error("Error adding to timeline:", error);
+		console.error("Error removing favorite", error);
+		res.status(500).send("Server error");
 	}
-}
+});
 
-await addToTimeline("Login", "User logged in", user.username);
-
-await addToTimeline(
-	"Favorite Added",
-	`Added ${pokemonname} to favorites`,
-	username
-);
-
+// Get timeline entries
 app.get("/timeline", isAuthenticated, async (req, res) => {
 	const username = req.session.user.username;
 	try {
-		const timelineEvents = await Timeline.find({ username: username }).sort({
-			date: -1,
-		});
-		res.json(timelineEvents);
-	} catch (error) {
-		console.error("Error fetching timeline:", error);
-		res.status(500).send("Server error fetching timeline");
+		const timeline = await Timeline.find({ username }).sort({ timestamp: -1 });
+		res.json(timeline);
+	} catch (err) {
+		console.error("Error loading timeline", err);
+		res.status(500).send("Error loading timeline");
 	}
 });
 
-app.use(isAuthenticated);
-app.get("/home", (req, res) => {
-	//res.sendFile(__dirname + "/index.html");
-	res.render("index", { username: req.session.user.username });
+// Delete timeline entry
+app.delete("/timeline/:id", isAuthenticated, async (req, res) => {
+	try {
+		await Timeline.findByIdAndDelete(req.params.id);
+		res.json({ success: true, message: "Deleted timeline entry" });
+	} catch (err) {
+		console.error("Error deleting timeline entry", err);
+		res.status(500).send("Error deleting timeline entry");
+	}
+});
+
+// Prevent favicon error in browser
+app.get("/favicon.ico", (req, res) => res.status(204));
+
+// Start the server
+app.listen(PORT, () => {
+	console.log(`Server running at http://localhost:${PORT}`);
 });
